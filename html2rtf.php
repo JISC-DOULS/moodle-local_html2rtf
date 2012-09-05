@@ -42,30 +42,22 @@ class html2rtf {
     public static function convert($html, $rtfoptions = null, $images = null) {
         rtf_xslt_functions::$images = $images;
         $doc = new DOMDocument('1.0');
-        //RTF uses Windows 1252 but some later readers e.g. word2002 suport unicode chars \u*
-        //First convert odd chars to html entities
-        $html = mb_convert_encoding($html, 'HTML-ENTITIES', "UTF-8");//better than htmlentities()
-        $html = iconv('utf-8', 'Windows-1252', $html);
-        $html = html_entity_decode($html, ENT_QUOTES, 'Windows-1252');//Decode entities so we can replace
-        $html = preg_replace('/&#(\d+);/me', "'\u\\1?'", $html);//replace decimal notation
-        $html = preg_replace('/&#x([a-f0-9]+);/mei', "'\u'.hexdec('\\1').'?'", $html);//replace hex
 
         //Load as HTML as this is more forgiving than an xml load
         if (!@$doc->loadHTML($html)) {
             throw new moodle_exception('Error converting the document - malformed HTML.');
         }
-        $doc->encoding = 'Windows-1252';
 
-        //Set HTML tag to have xhtml namespace
-        $doc->getElementsByTagName('html')->item(0)->setAttributeNS('http://www.w3.org/2000/xmlns/',
-            'xmlns', 'http://www.w3.org/1999/xhtml');
+        // Recursively fix all text nodes to replace special characters.
+        self::replace_non_ascii_text($doc->documentElement);
 
-        //Using loadHTML means that the xhtml namespace is not used (even when added)
-        //But by adding it and then reloading the output as xml we end up using it correctly
+        // Get rid of html doctype.
+        $newxml = preg_replace('~<!DOCTYPE html[^>]+>~', '', $doc->saveXML());
 
-        //Git rid of html doctype
-        $newxml = str_replace('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">'
-        , '', $doc->saveXML());
+        // Sort out the xmlns attribute, for some reason we seem to get two of them
+        $newxml = preg_replace('~<html[^>]*>~',
+                '<html xmlns="http://www.w3.org/1999/xhtml">', $newxml);
+
         //Load string as new xml and set encoding to Windows-1252
         $doc->loadXML($newxml);
         $doc->encoding = 'Windows-1252';
@@ -104,6 +96,59 @@ class html2rtf {
         $rtf = str_replace('%%COLOURTABLE%%', rtf_xslt_functions::$coltableoutput, $rtf);
 
         return $rtf;
+    }
+
+    /**
+     * Recursively searches all text nodes in the document for non-ASCII
+     * characters. Internally, all text should be in UTF-8 format. The non-ASCII
+     * characters will then be replaced by a <specialcharacter dec="12345"/>
+     * tag.
+     *
+     * @param DOMNode $node
+     */
+    private static function replace_non_ascii_text(DOMNode $node) {
+        if ($node->nodeType == XML_TEXT_NODE) {
+            // If the string contains only ASCII, do nothing.
+            $before = $node->nodeValue;
+            if (preg_match('~^[\x00-\x7f]*$~', $before)) {
+                return;
+            }
+            // Handle each character one at a time.
+            $length = textlib::strlen($before);
+            $currenttext = '';
+            $doc = $node->ownerDocument;
+            $parent = $node->parentNode;
+            for ($pos = 0; $pos < $length; $pos++) {
+                $char = textlib::substr($before, $pos, 1);
+                if (strlen($char) == 1) {
+                    // ASCII, add to text node.
+                    $currenttext .= $char;
+                } else {
+                    // First add in already-retrieved text if any.
+                    if ($currenttext !== '') {
+                        $parent->insertBefore($doc->createTextNode($currenttext), $node);
+                        $currenttext = '';
+                    }
+                    // Now add specialcharacter tag.
+                    $ent = textlib::utf8_to_entities($char, true);
+                    $tag = $doc->createElement('specialcharacter');
+                    $tag->setAttribute('dec', preg_replace('~^&#([0-9]+);$~', '\1', $ent));
+                    $parent->insertBefore($tag, $node);
+                }
+            }
+            // Add in remaining text if any.
+            if ($currenttext !== '') {
+                $parent->insertBefore($doc->createTextNode($currenttext), $node);
+                $currenttext = '';
+            }
+            // Remove original node.
+            $parent->removeChild($node);
+        } else if ($node->nodeType == XML_ELEMENT_NODE) {
+            for ($child = $node->firstChild; $child; $child = $next) {
+                $next = $child->nextSibling;
+                self::replace_non_ascii_text($child);
+            }
+        }
     }
 }
 
@@ -257,7 +302,7 @@ class rtf_xslt_functions {
         //use GD lib if enabled (no extra download)
 
         if (extension_loaded('gd')) {
-            if ($img = imagecreatefromstring($fh)) {
+            if ($img = @imagecreatefromstring($fh)) {
                 $imageinfo = array();
                 $imageinfo[0] = imagesx($img);
                 $imageinfo[1] = imagesy($img);
