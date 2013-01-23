@@ -209,7 +209,7 @@ class rtf_xslt_functions {
      * @param string $seperator (to separate RGB values. Applicable only if second parameter is true.)
      * @return array or string (depending on second parameter. Returns False if invalid hex color value)
      */
-    private function hex_to_rgb($hexstr, $returnasstring = false, $seperator = ',') {
+    private static function hex_to_rgb($hexstr, $returnasstring = false, $seperator = ',') {
         //$hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr); // Gets a proper hex string
         $rgbarray = array();
         if (strlen($hexstr) == 6) { //If a proper hex code, convert using bitwise operation. No overhead... faster
@@ -442,7 +442,7 @@ class rtf_xslt_functions {
     public static function tablecellwidthfill($objxmlnodes, $tablewidth) {
         $strtext = "";
         if ($objxmlnodes != null && count($objxmlnodes) != 0) {
-            $objrownodes = $objxmlnodes[0]->childNodes;
+            $objrownodes = $objxmlnodes[0]->getElementsByTagName('tr');
             $objrownode;
             $objcolnodes;
             self::$arrmaxlen = Array();
@@ -450,7 +450,7 @@ class rtf_xslt_functions {
             $maxwordlen;
             for ($i = 0, $len = $objrownodes->length; $i < $len; $i++) {
                 $objrownode = $objrownodes->item($i);
-                $objcolnodes = $objrownode->childNodes;
+                $objcolnodes = $objrownode->getElementsByTagName('*');
                 if (is_a($objcolnodes, 'DOMNodeList')) {
                     $counter = 0;
                     for ($j = 0, $len2 = $objcolnodes->length; $j < $len2; $j++) {
@@ -485,8 +485,8 @@ class rtf_xslt_functions {
                 $totalwidthmax = 0;
 
                 for ($i = 0, $len = count(self::$arrmaxlen); $i < $len; $i++) {
-                    $totalwidthtot += (self::$arrtotlen[$i]*self::$multiplywidth + 2*self::$marginwidth);
-                    $totalwidthmax += (self::$arrmaxlen[$i]*self::$multiplywidth + 2*self::$marginwidth);
+                    $totalwidthtot += (self::$arrtotlen[$i]*self::$multiplywidth + (2*self::$marginwidth));
+                    $totalwidthmax += (self::$arrmaxlen[$i]*self::$multiplywidth + (2*self::$marginwidth));
                 }
 
                 $tablewidthtot = $tablewidth;
@@ -504,7 +504,7 @@ class rtf_xslt_functions {
 
                 for ($i = 0, $len = count(self::$arrmaxlen); $i < $len; $i++) {
                     self::$arrmaxlen[$i] =
-                    (self::$arrmaxlen[$i]*self::$multiplywidth + 2*self::$marginwidth)
+                    (self::$arrmaxlen[$i]*self::$multiplywidth + (2*self::$marginwidth))
                     *$tablewidth/$totalwidthtot/self::$multiplywidth;
                 }
             }
@@ -524,17 +524,17 @@ class rtf_xslt_functions {
         $icolumn = $icolumn-1;
         if ($icolumn < count(self::$arrmaxlen) && $icolumn >= 0) {
             if ( $bsum == 0 ) {
-                return (2*self::$marginwidth +  self::$arrmaxlen[$icolumn]*$multiplywidth);
+                return ((2*self::$marginwidth) +  self::$arrmaxlen[$icolumn]*$multiplywidth);
             } else if ( $bsum == 1 ) {
-                return (2*self::$marginwidth +  self::$arrtotlen[$icolumn]*$multiplywidth);
+                return ((2*self::$marginwidth) +  self::$arrtotlen[$icolumn]*$multiplywidth);
             } else if ( $bsum == 2 ) {
                 for ($i = 0; $i <= $icolumn; $i++) {
-                    $sum += (2*self::$marginwidth + self::$arrmaxlen[$i]*$multiplywidth);
+                    $sum += ((2*self::$marginwidth) + self::$arrmaxlen[$i]*$multiplywidth);
                 }
                 return $sum;
             } else if ( $bsum == 3 ) {
                 for ($i = 0; $i <= $icolumn; $i++) {
-                    $sum += (2*self::$marginwidth + self::$arrtotlen[$i]*$multiplywidth);
+                    $sum += ((2*self::$marginwidth) + self::$arrtotlen[$i]*$multiplywidth);
                 }
                 return $sum;
             }

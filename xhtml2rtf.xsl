@@ -584,4 +584,13 @@
 <xsl:template match="xhtml:p[@class = 'title']"><xsl:param name="preformatted" select="0"/>\pard \sb100\sa100 {\b\fs22 <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
 <xsl:template match="xhtml:p[@class = 'rtf_header']"><xsl:call-template name="header"/></xsl:template>
 <xsl:template match="xhtml:p[@class = 'rtf_header_first']"><xsl:call-template name="header_first"/></xsl:template>
+
+<!-- Special character Unicode support. -->
+<xsl:template match="xhtml:specialcharacter">
+    <xsl:text>\u</xsl:text>
+    <xsl:value-of select="@dec"/>
+    <!-- This is the symbol to use for readers that don't support Unicode. -->
+    <xsl:text>?</xsl:text>
+</xsl:template>
+
 </xsl:stylesheet>
