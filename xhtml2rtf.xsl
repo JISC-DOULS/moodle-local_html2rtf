@@ -174,15 +174,15 @@
 \headery<xsl:value-of select="round($header-distance-from-edge)" />\footery<xsl:value-of select="round($footer-distance-from-edge)" />
 {\fs<xsl:value-of select="round($font-size-default)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="0"/></xsl:apply-templates>}</xsl:template>
 <!--         * Grouping elements: the DIV and  elements http://www.w3.org/TR/html4/struct/global.html#h-7.5.4 -->
-<xsl:template match="xhtml:div"><xsl:param name="preformatted" select="0"/>\pard \sa60 <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>\par </xsl:template>
+<xsl:template match="xhtml:div"><xsl:param name="preformatted" select="0"/><xsl:if test="child::text()">\pard \sa60 </xsl:if><xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates><xsl:if test="child::text()">\par </xsl:if></xsl:template>
 <xsl:template match="xhtml:span" name="span"><xsl:param name="preformatted" select="0"/><xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates></xsl:template>
 <!--         * Headings: The H1, H2, H3, H4, H5, H6 elements http://www.w3.org/TR/html4/struct/global.html#h-7.5.5 -->
-<xsl:template match="xhtml:h1"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*2.0)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
-<xsl:template match="xhtml:h2"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.5)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
-<xsl:template match="xhtml:h3"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.1)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
-<xsl:template match="xhtml:h4"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.0)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
-<xsl:template match="xhtml:h5"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*0.8)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
-<xsl:template match="xhtml:h6"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*0.6)" /> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h1"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*2.0)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h2"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.5)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h3"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.1)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h4"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*1.0)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h5"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*0.8)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
+<xsl:template match="xhtml:h6"><xsl:param name="preformatted" select="0"/>\sb120\sa120 {\b\fs<xsl:value-of select="round($font-size-default*0.6)" />{}<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par </xsl:template>
 <!--         * The ADDRESS element http://www.w3.org/TR/html4/struct/global.html#h-7.5.6 -->
 <xsl:template match="xhtml:address"><xsl:param name="preformatted" select="0"/>\pard {\i <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>} \par </xsl:template>
 <!--   ==================================================== -->
@@ -221,7 +221,7 @@
   <xsl:choose>
     <!-- when a paragraph follows a paragraph, add up some space between the two (space after: \saX, space before: \sbX) -->
     <xsl:when test="name(following-sibling::node()[position() = 1]) = 'p'">\pard <xsl:call-template name="attribute_align" /><xsl:call-template name="tokenize-style"></xsl:call-template>\sb100\sa100 {<xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>}\par \pard </xsl:when>
-    <xsl:otherwise><xsl:call-template name="attribute_align" /><xsl:call-template name="tokenize-style"></xsl:call-template> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>\par \pard </xsl:otherwise>
+    <xsl:otherwise><xsl:call-template name="attribute_align" /><xsl:call-template name="tokenize-style"></xsl:call-template> <xsl:apply-templates><xsl:with-param name="preformatted" select="$preformatted"/></xsl:apply-templates>\par </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
 <!--       TODO: handle Paragraph attributes WITHIN the p template (avoid copy/paste of paragraph processing) -->
@@ -270,7 +270,6 @@
 <!-- * Tables http://www.w3.org/TR/html4/struct/tables.html -->
 <!--   * The TABLE element http://www.w3.org/TR/html4/struct/tables.html#h-11.2.1 -->
 <xsl:template match="xhtml:table" name="table">
-\par \pard
 <xsl:variable name="tableWidthVar">
 <xsl:choose>
     <xsl:when test="contains(@width, '%')">
@@ -294,7 +293,7 @@
 <xsl:template match="xhtml:tr" name="tr">
 <xsl:param name="tableWidth"/>
 <xsl:param name="tableBorder"/>
-{\trowd \trql\trgaph108\trrh280\trleft36
+\pard{\trowd \trql\trgaph108\trrh280\trleft36\trwWidth9639\trftsWidth3
 <!-- moodle - Addded cell creation for th in rows -->
 <xsl:for-each select="xhtml:td|xhtml:th">
 \clvertalc
@@ -305,21 +304,21 @@
 \clbrdrr\brdrs\brdrw<xsl:value-of select="format-number($tableBorder*15,'#')"/>
 </xsl:if>
 \cellx<xsl:value-of select="format-number(php:function('rtf_xslt_functions::gettablecolumnwidth', position(), 2, $font-size-default), '#')"/>
-\clwWidth<xsl:value-of select="format-number(php:function('rtf_xslt_functions::gettablecolumnwidth', position(), 0, $font-size-default), '#')"/>
-</xsl:for-each>
-{\intbl \ql
+<!-- \clwWidth<xsl:value-of select="format-number(php:function('rtf_xslt_functions::gettablecolumnwidth', position(), 0, $font-size-default), '#')"/>
+ --></xsl:for-each>
+\pard\intbl
 <xsl:apply-templates/>
-}
-  \pard\intbl\row }
+\row\pard }
 </xsl:template>
 <!-- Support for captions - appear as paragraph outside table -->
 <xsl:template match="xhtml:caption">{\par \pard {<xsl:apply-templates/>}\par \pard }</xsl:template>
 <!--   * The TD element http://www.w3.org/TR/html4/struct/tables.html#h-11.2.6 -->
 <!-- TODO fix bugs in RTF table generation (Error message on WordXP, crashes Word2000!!!) -->
 <!-- <xsl:template match="xhtml:td" name="td">\~<xsl:apply-templates/></xsl:template> -->
-<xsl:template match="xhtml:td" name="td"><xsl:apply-templates/>  \cell </xsl:template>
+<xsl:template match="xhtml:td" name="td">\clvertalt <xsl:apply-templates/>  \par
+\cell </xsl:template>
 <!--   * The TH element http://www.w3.org/TR/html4/struct/tables.html#h-11.2.6 -->
-<xsl:template match="xhtml:th" name="th">{\intbl \li57\ri57 {\b <xsl:apply-templates/>}\cell }</xsl:template>
+<xsl:template match="xhtml:th" name="th">{\intbl \li57\ri57 {\b <xsl:apply-templates/>}\intbl\cell }</xsl:template>
 <!--     Known classes, attributes and styles for table, row and cells -->
 <xsl:template match="xhtml:table[@class = 'rtf_header']"><xsl:call-template name="header"/></xsl:template>
 <xsl:template match="xhtml:table[@class = 'rtf_header_first']"><xsl:call-template name="header_first"/></xsl:template>
@@ -340,7 +339,9 @@
   <!-- TODO support BOTH attributes name and href for same anchor -->
   <xsl:choose>
     <!-- When there's a name attribute, we create a bookmark with the given name -->
-    <xsl:when test="@name or (@id and not(@href))">{\bkmkstart <xsl:value-of select="@name"/>}<xsl:apply-templates/>{\bkmkend <xsl:value-of select="@name"/>}</xsl:when>
+    <xsl:when test="@name and not(@href)">{\bkmkstart <xsl:value-of select="@name"/>}<xsl:apply-templates/>{\bkmkend <xsl:value-of select="@name"/>}</xsl:when>
+    <!-- When there's an id attribute, we create a bookmark with the given id -->
+    <xsl:when test="@id and not(@href)">{\bkmkstart <xsl:value-of select="@id"/>}<xsl:apply-templates/>{\bkmkend <xsl:value-of select="@id"/>}</xsl:when>
     <!-- When there's an href attribute, we create a field "hyperlink" to the given href -->
     <xsl:otherwise>
       <xsl:choose>

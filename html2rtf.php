@@ -275,9 +275,10 @@ class rtf_xslt_functions {
         $imagenode = $imagenodes[0];
         $imagesrc = $imagenode->getAttribute('src');
         $images = self::$images;
+        $converted = false;
 
-        if (!empty($images) && !empty($images[$imagesrc])) {
-            $fh = self::$images[$imagesrc];
+        if (!empty($images) && !empty($images[urldecode($imagesrc)])) {
+            $fh = self::$images[urldecode($imagesrc)];
         } else {
             //get the image (if we can't get access then send nothing)
             $fh = @download_file_content($imagesrc);
@@ -286,6 +287,19 @@ class rtf_xslt_functions {
         if (!$fh) {
             return '';
         } else {
+            if (strpos($imagesrc, '.gif')) {
+                // Try and convert gif into a png as no gif support in rtf.
+                if (extension_loaded('gd')) {
+                    if ($img = @imagecreatefromstring($fh)) {
+                        ob_start();
+                        if (imagepng($img)) {
+                            $fh = ob_get_contents();
+                            $converted = true;
+                        }
+                        ob_end_clean();
+                    }
+                }
+            }
             //Work out image hex
             $pichex = '';
             for ($i = 0, $len = strlen($fh); $i < $len; $i++) {
@@ -340,7 +354,8 @@ class rtf_xslt_functions {
 
         //work out format
         $typestring = '\jpegblip ';
-        if ((isset($imageinfo[2]) && $imageinfo[2] == 3) || strpos($imagesrc, '.png')) {
+        if ((isset($imageinfo[2]) && $imageinfo[2] == 3) || strpos($imagesrc, '.png')
+                || (strpos($imagesrc, '.gif') && $converted)) {
             $typestring = '\pngblip ';
         }
 
@@ -396,7 +411,10 @@ class rtf_xslt_functions {
                         // Preformatted mode - use \line for all EOL characters
                         $arrchars[$intchar] = "\\line ";
                         // Check if next node is a paragraph - if yes, we will use a paragraph break INSTEAD of line break
-                        if ($objxmlodes != null && count($objxmlodes) != 0) {
+                        // Edit by sam: Although this is not documented,
+                        // simplexml_import_dom does not work for text nodes.
+                        if ($objxmlodes != null && count($objxmlodes) != 0 &&
+                                !($objxmlodes[0] instanceof DOMText)) {
                             $objxmlcontext = $objxmlodes[0];
                             $s = simplexml_import_dom($objxmlcontext);
                             $objnextnode = $s->xpath('following-sibling::node()[position() = 1]');
